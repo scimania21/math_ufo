@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Math UFO Shooter (Final)</title>
+    <style>
+        /* --- 기본 설정 --- */
+        * { box-sizing: border-box; touch-action: manipulation; font-family: 'Verdana', sans-serif; user-select: none; }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* --- 게임 컨테이너 --- */
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 100%;
+            background-color: #1a1a2e;
+            border-left: 1px solid #333;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* --- 상단 정보창 --- */
+        #header {
+            flex: 0 0 auto;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            font-weight: bold;
+            z-index: 10;
+            background: rgba(0,0,0,0.3);
+        }
+        .info-box { background: rgba(0, 0, 0, 0.6); padding: 5px 12px; border-radius: 15px; border: 1px solid #555; }
+        #timer { color: #ffeb3b; }
+        #score { color: #00e676; }
+
+        /* --- 게임 화면 --- */
+        #game-screen {
+            flex: 1 1 auto;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 2px solid #00e676;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px);
+            background-size: 550px 550px, 350px 350px;
+            background-position: 0 0, 40px 60px;
+        }
+
+        /* --- UFO --- */
+        .ufo {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform: translateX(-50%);
+            z-index: 5;
+        }
+        
+        .ufo-cockpit {
+            background: #000;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            position: relative;
+            bottom: -5px;
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 8px #ffd700;
+            z-index: 2;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .ufo-body {
+            width: 70px;
+            height: 22px;
+            background: #ddd;
+            border-radius: 50%;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+        }
+
+        /* --- 레이저 --- */
+        .laser {
+            position: absolute;
+            width: 6px;
+            height: 30px;
+            background-color: #00e676;
+            box-shadow: 0 0 8px #00e676;
+            border-radius: 3px;
+            transform: translateX(-50%);
+            z-index: 4;
+        }
+
+        /* --- 하단 컨트롤 패널 --- */
+        #control-panel {
+            flex: 0 0 auto;
+            background-color: #111;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+        }
+
+        #energy-wrapper {
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            color:#bbb; 
+            font-size:0.8rem; 
+            margin-bottom: 2px;
+        }
+        #energy-container {
+            width: 100%;
+            height: 8px;
+            background-color: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #energy-bar {
+            width: 100%;
+            height: 100%;
+            background-color: #00e676;
+            transition: width 0.3s ease, background-color 0.3s;
+        }
+
+        #input-display {
+            width: 100%;
+            height: 45px;
+            background-color: #222;
+            border: 2px solid #00e676;
+            border-radius: 8px;
+            color: #00e676;
+            font-size: 1.8rem;
+            text-align: center;
+            line-height: 43px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        #keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        .key {
+            background-color: #333;
+            color: white;
+            font-size: 1.4rem;
+            font-weight: bold;
+            padding: 12px 0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.1s, transform 0.05s;
+        }
+        .key:active { background-color: #555; transform: scale(0.95); }
+        
+        .key-fire { 
+            background-color: #00e676; 
+            color: #000; 
+            font-size: 1.2rem;
+        }
+        .key-fire:active { background-color: #00b359; }
+        
+        .key-del { 
+            background-color: #444; 
+            font-size: 1rem; 
+        }
+
+        /* --- 오버레이 --- */
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 20, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+        }
+        #overlay h1 { font-size: 3rem; color: #00e676; margin-bottom: 10px; text-shadow: 0 0 15px #00e676; }
+        #overlay p { font-size: 1.1rem; margin-bottom: 30px; color: #ccc; line-height: 1.6; }
+        #start-btn {
+            padding: 15px 50px;
+            font-size: 1.5rem;
+            background: #00e676;
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 230, 118, 0.4);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .damage-effect {
+            animation: damageFlash 0.3s;
+        }
+        @keyframes damageFlash {
+            0% { box-shadow: inset 0 0 0 0 rgba(255, 0, 0, 0); }
+            50% { box-shadow: inset 0 0 50px 30px rgba(255, 0, 0, 0.5); }
+            100% { box-shadow: inset 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="header">
+        <div class="info-box">시간: <span id="timer">60</span></div>
+        <div class="info-box">점수: <span id="score">0</span></div>
+    </div>
+
+    <div id="game-screen"></div>
+
+    <div id="control-panel">
+        <div id="energy-wrapper">
+            <span>ENERGY</span>
+            <span id="energy-text">100%</span>
+        </div>
+        <div id="energy-container">
+            <div id="energy-bar"></div>
+        </div>
+
+        <div id="input-display"></div>
+
+        <div id="keypad">
+            <button class="key" onclick="inputNum(1)">1</button>
+            <button class="key" onclick="inputNum(2)">2</button>
+            <button class="key" onclick="inputNum(3)">3</button>
+            <button class="key" onclick="inputNum(4)">4</button>
+            <button class="key" onclick="inputNum(5)">5</button>
+            <button class="key" onclick="inputNum(6)">6</button>
+            <button class="key" onclick="inputNum(7)">7</button>
+            <button class="key" onclick="inputNum(8)">8</button>
+            <button class="key" onclick="inputNum(9)">9</button>
+            <button class="key key-del" onclick="deleteInput()">지움</button>
+            <button class="key" onclick="inputNum(0)">0</button>
+            <button class="key key-fire" onclick="fireLaser()">발사</button>
+        </div>
+    </div>
+
+    <div id="overlay">
+        <h1 id="overlay-title">MATH UFO</h1>
+        <p id="overlay-msg">정답을 입력하고 발사하여<br>지구를 지켜주세요!<br>(초등 수학: 곱셈 & 나눗셈)</p>
+        <button id="start-btn" onclick="startGame()">게임 시작</button>
+    </div>
+</div>
+
+<script>
+    // --- 게임 상태 변수 ---
+    let score = 0;
+    let time = 60;
+    let energy = 100;
+    let isPlaying = false;
+    let spawnTimer;
+    let countdownTimer;
+    let ufos = [];
+    let currentInput = "";
+    
+    // 오디오 컨텍스트
+    let audioCtx;
+
+    // DOM 요소
+    const gameScreen = document.getElementById('game-screen');
+    const inputDisplay = document.getElementById('input-display');
+    const scoreEl = document.getElementById('score');
+    const timerEl = document.getElementById('timer');
+    const energyBar = document.getElementById('energy-bar');
+    const energyText = document.getElementById('energy-text');
+    const overlay = document.getElementById('overlay');
+    const container = document.getElementById('game-container');
+
+    // --- 사운드 생성 함수 (Web Audio API) ---
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playLaserSound() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        osc.type = 'sawtooth'; 
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2); 
+
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); 
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    function playExplosionSound() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
+
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function playWrongSound() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+
+    // --- 게임 로직 ---
+    function startGame() {
+        initAudio(); // 게임 시작 시 오디오 활성화
+        score = 0;
+        time = 60;
+        energy = 100;
+        ufos = [];
+        currentInput = "";
+        updateUI();
+        gameScreen.innerHTML = '';
+        overlay.style.display = 'none';
+        isPlaying = true;
+
+        countdownTimer = setInterval(() => {
+            time--;
+            timerEl.innerText = time;
+            if (time <= 0) endGame("시간 종료!");
+        }, 1000);
+
+        spawnTimer = setInterval(spawnUFO, 2000); // 2초마다 생성
+
+        requestAnimationFrame(updateGame);
+    }
+
+    function endGame(reason) {
+        isPlaying = false;
+        clearInterval(countdownTimer);
+        clearInterval(spawnTimer);
+        
+        document.getElementById('overlay-title').innerText = "게임 종료";
+        document.getElementById('overlay-msg').innerHTML = `${reason}<br><br>최종 점수: <span style="color:#00e676; font-size:1.5rem;">${score}</span> 점`;
+        document.getElementById('start-btn').innerText = "다시 하기";
+        overlay.style.display = 'flex';
+    }
+
+    function generateProblem() {
+        const type = Math.random() > 0.5 ? 'mul' : 'div';
+        let num1, num2, answer, text;
+
+        if (type === 'mul') {
+            num1 = Math.floor(Math.random() * 8) + 2; 
+            num2 = Math.floor(Math.random() * 9) + 1;
+            answer = num1 * num2;
+            text = `${num1} × ${num2}`;
+        } else {
+            let divisor = Math.floor(Math.random() * 8) + 2;
+            let quotient = Math.floor(Math.random() * 9) + 1;
+            let dividend = divisor * quotient;
+            answer = quotient;
+            text = `${dividend} ÷ ${divisor}`;
+        }
+        return { text, answer };
+    }
+
+    function spawnUFO() {
+        if (!isPlaying) return;
+
+        const problem = generateProblem();
+        const ufoEl = document.createElement('div');
+        ufoEl.classList.add('ufo');
+        ufoEl.innerHTML = `
+            <div class="ufo-cockpit">${problem.text}</div>
+            <div class="ufo-body"></div>
+        `;
+
+        const screenWidth = gameScreen.clientWidth;
+        const xPos = Math.random() * (screenWidth - 100) + 50; 
+        
+        ufoEl.style.left = `${xPos}px`;
+        ufoEl.style.top = `-60px`;
+
+        gameScreen.appendChild(ufoEl);
+
+        const speed = Math.random() * 0.2 + 0.15; 
+
+        ufos.push({
+            el: ufoEl,
+            x: xPos,
+            y: -60,
+            answer: problem.answer,
+            speed: speed
+        });
+    }
+
+    function updateGame() {
+        if (!isPlaying) return;
+
+        const screenHeight = gameScreen.clientHeight;
+
+        for (let i = ufos.length - 1; i >= 0; i--) {
+            let ufo = ufos[i];
+            ufo.y += ufo.speed;
+            ufo.el.style.top = `${ufo.y}px`;
+
+            if (ufo.y > screenHeight - 30) {
+                damageEnergy();
+                ufo.el.remove();
+                ufos.splice(i, 1);
+            }
+        }
+
+        requestAnimationFrame(updateGame);
+    }
+
+    function damageEnergy() {
+        energy -= 15;
+        container.classList.add('damage-effect');
+        setTimeout(() => container.classList.remove('damage-effect'), 300);
+
+        if (energy <= 0) {
+            energy = 0;
+            updateUI();
+            endGame("에너지 고갈!");
+        } else {
+            updateUI();
+        }
+    }
+
+    function updateUI() {
+        scoreEl.innerText = score;
+        inputDisplay.innerText = currentInput;
+        energyBar.style.width = `${energy}%`;
+        energyText.innerText = `${energy}%`;
+        
+        if (energy <= 30) energyBar.style.backgroundColor = '#ff1744';
+        else if (energy <= 60) energyBar.style.backgroundColor = '#ffea00';
+        else energyBar.style.backgroundColor = '#00e676';
+    }
+
+    function inputNum(num) {
+        if (!isPlaying) return;
+        if (currentInput.length < 3) {
+            currentInput += num;
+            updateUI();
+        }
+    }
+
+    function deleteInput() {
+        currentInput = "";
+        updateUI();
+    }
+
+    function fireLaser() {
+        if (!isPlaying || currentInput === "") return;
+
+        const answer = parseInt(currentInput);
+        let hitIndex = -1;
+        let lowestY = -1000;
+
+        // 정답 체크
+        for (let i = 0; i < ufos.length; i++) {
+            if (ufos[i].answer === answer) {
+                if (ufos[i].y > lowestY) {
+                    lowestY = ufos[i].y;
+                    hitIndex = i;
+                }
+            }
+        }
+
+        if (hitIndex !== -1) {
+            // 명중
+            const target = ufos[hitIndex];
+            
+            // 효과음 재생
+            playLaserSound(); 
+            setTimeout(playExplosionSound, 100); 
+
+            createLaser(target.x, target.y);
+            
+            const boom = document.createElement('div');
+            boom.innerText = "💥";
+            boom.style.position = 'absolute';
+            boom.style.left = target.x + 'px';
+            boom.style.top = target.y + 'px';
+            boom.style.fontSize = '2rem';
+            boom.style.zIndex = 6;
+            gameScreen.appendChild(boom);
+            setTimeout(() => boom.remove(), 500);
+
+            target.el.remove();
+            ufos.splice(hitIndex, 1);
+            score += 10;
+            currentInput = ""; 
+        } else {
+            // 오답 처리
+            playWrongSound();
+            
+            // ★ 감점 로직 추가 (3점 감점, 최소 0점) ★
+            score -= 3;
+            if (score < 0) score = 0;
+
+            inputDisplay.style.borderColor = 'red';
+            setTimeout(() => inputDisplay.style.borderColor = '#00e676', 200);
+            currentInput = "";
+        }
+        updateUI();
+    }
+
+    function createLaser(targetX, targetY) {
+        const laser = document.createElement('div');
+        laser.classList.add('laser');
+        laser.style.left = `${targetX}px`;
+        laser.style.bottom = '0px';
+        laser.style.height = '1000px'; 
+        
+        gameScreen.appendChild(laser);
+
+        setTimeout(() => {
+            laser.style.opacity = '0';
+        }, 50);
+        setTimeout(() => {
+            laser.remove();
+        }, 150);
+    }
+</script>
+
+</body>
+</html>

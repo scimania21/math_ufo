@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Math UFO Responsive</title>
+    <title>Math UFO (5 Min Challenge)</title>
     <style>
         /* --- 기본 설정 --- */
         * { box-sizing: border-box; touch-action: manipulation; font-family: 'Verdana', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -14,29 +14,28 @@
             background-color: #111;
             width: 100%;
             height: 100%;
-            /* 모바일 주소창 대응을 위한 dvh 단위 사용, 미지원 브라우저는 vh 사용 */
             height: 100vh;
             height: 100dvh; 
             overflow: hidden;
             color: white;
         }
 
-        /* --- 게임 전체 레이아웃 (Flexbox) --- */
+        /* --- 게임 전체 레이아웃 --- */
         #game-container {
             position: relative;
             width: 100%;
-            max-width: 600px; /* 태블릿 등 큰 화면에서 너무 퍼지지 않게 */
+            max-width: 600px;
             height: 100%;
-            margin: 0 auto; /* 중앙 정렬 */
+            margin: 0 auto;
             background-color: #1a1a2e;
             display: flex;
-            flex-direction: column; /* 세로 배치 */
+            flex-direction: column;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* 1. 상단 정보창 (고정 크기) */
+        /* 상단 정보창 */
         #header {
-            flex: 0 0 auto; /* 크기 줄어들지 않음 */
+            flex: 0 0 auto;
             padding: 10px 15px;
             display: flex;
             justify-content: space-between;
@@ -49,10 +48,10 @@
         #timer { color: #ffeb3b; }
         #score { color: #00e676; }
 
-        /* 2. 게임 화면 (남는 공간 모두 차지) */
+        /* 게임 화면 */
         #game-screen {
-            flex: 1 1 auto; /* 남는 공간을 채움 */
-            min-height: 0;  /* 중요: 내용물이 많아도 이 영역이 줄어들 수 있게 함 */
+            flex: 1 1 auto;
+            min-height: 0;
             position: relative;
             overflow: hidden;
             border-bottom: 2px solid #00e676;
@@ -72,7 +71,7 @@
             justify-content: center;
             transform: translateX(-50%);
             z-index: 5;
-            will-change: top; /* 성능 최적화 */
+            will-change: top;
         }
         
         .ufo-cockpit {
@@ -81,7 +80,7 @@
             padding: 6px 12px;
             border-radius: 12px;
             font-weight: bold;
-            font-size: 1.1rem; /* 모바일 고려 폰트 조정 */
+            font-size: 1.1rem;
             position: relative;
             bottom: -5px;
             border: 2px solid #ffd700;
@@ -104,7 +103,7 @@
         .laser {
             position: absolute;
             width: 6px;
-            height: 100%; /* 화면 끝까지 */
+            height: 100%;
             background-color: #00e676;
             box-shadow: 0 0 8px #00e676;
             transform: translateX(-50%);
@@ -112,12 +111,12 @@
             transform-origin: bottom;
         }
 
-        /* 3. 하단 컨트롤 패널 (화면 하단에 딱 붙음) */
+        /* 하단 컨트롤 패널 */
         #control-panel {
-            flex: 0 0 auto; /* 크기 줄어들지 않음 */
+            flex: 0 0 auto;
             background-color: #111;
             padding: 10px;
-            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* 아이폰 하단 바 대응 */
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -125,7 +124,6 @@
             z-index: 20;
         }
 
-        /* 에너지 바 */
         #energy-wrapper {
             display: flex; 
             align-items: center; 
@@ -148,10 +146,9 @@
             transition: width 0.3s ease, background-color 0.3s;
         }
 
-        /* 입력창 */
         #input-display {
             width: 100%;
-            height: 40px; /* 고정 높이 */
+            height: 40px;
             background-color: #222;
             border: 2px solid #00e676;
             border-radius: 8px;
@@ -163,12 +160,10 @@
             letter-spacing: 2px;
         }
 
-        /* 키패드 (반응형 그리드) */
         #keypad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 6px;
-            /* 화면 높이에 따라 키패드 높이 유동적 조절 (너무 크거나 작지 않게) */
             height: 30vh; 
             max-height: 250px; 
             min-height: 180px; 
@@ -182,12 +177,11 @@
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            /* 버튼 내용물 중앙 정렬 */
             display: flex;
             align-items: center;
             justify-content: center;
             width: 100%;
-            height: 100%; /* 그리드 셀 꽉 채우기 */
+            height: 100%;
             transition: background 0.1s;
         }
         .key:active { background-color: #555; }
@@ -240,7 +234,7 @@
 
 <div id="game-container">
     <div id="header">
-        <div class="info-box">시간: <span id="timer">60</span></div>
+        <div class="info-box">시간: <span id="timer">300</span></div>
         <div class="info-box">점수: <span id="score">0</span></div>
     </div>
 
@@ -275,22 +269,24 @@
 
     <div id="overlay">
         <h1 id="overlay-title">MATH UFO</h1>
-        <p id="overlay-msg">정답을 입력하고 발사하여<br>지구를 지켜주세요!<br>(초등 수학: 곱셈 & 나눗셈)</p>
+        <p id="overlay-msg">정답을 입력하고 UFO를 격추하세요!<br>시간이 지날수록 더 빨라집니다.<br>(제한시간 5분)</p>
         <button id="start-btn" onclick="startGame()">게임 시작</button>
     </div>
 </div>
 
 <script>
-    // --- 게임 상태 변수 ---
+    // --- 게임 설정 ---
+    const GAME_DURATION = 300; // 5분 (300초)
+    
+    // --- 상태 변수 ---
     let score = 0;
-    let time = 60;
+    let time = GAME_DURATION;
     let energy = 100;
     let isPlaying = false;
-    let spawnTimer;
+    let spawnTimeout; // setTimeout ID 저장
     let countdownTimer;
     let ufos = [];
     let currentInput = "";
-    
     let audioCtx;
 
     // DOM 요소
@@ -303,7 +299,7 @@
     const overlay = document.getElementById('overlay');
     const container = document.getElementById('game-container');
 
-    // --- 사운드 함수 ---
+    // --- 사운드 ---
     function initAudio() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -319,16 +315,11 @@
         const gainNode = audioCtx.createGain();
         osc.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-        
         osc.type = type;
         osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
-        if (endFreq) {
-            osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
-        }
-        
+        if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
         gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        
         osc.start();
         osc.stop(audioCtx.currentTime + duration);
     }
@@ -343,11 +334,8 @@
         gainNode.connect(audioCtx.destination);
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
-        // 삐- 소리 (주파수 변화 없음)
-        
         gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
         gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
-        
         osc.start();
         osc.stop(audioCtx.currentTime + 0.3);
     }
@@ -356,7 +344,7 @@
     function startGame() {
         initAudio();
         score = 0;
-        time = 60;
+        time = GAME_DURATION;
         energy = 100;
         ufos = [];
         currentInput = "";
@@ -365,13 +353,20 @@
         overlay.style.display = 'none';
         isPlaying = true;
 
+        // 타이머 시작
         countdownTimer = setInterval(() => {
             time--;
-            timerEl.innerText = time;
+            // 남은 시간을 분:초 형식으로 보여주고 싶다면 아래 주석 해제
+            // let min = Math.floor(time / 60);
+            // let sec = time % 60;
+            // timerEl.innerText = `${min}:${sec < 10 ? '0'+sec : sec}`;
+            timerEl.innerText = time; // 그냥 초 단위 표시
+
             if (time <= 0) endGame("시간 종료!");
         }, 1000);
 
-        spawnTimer = setInterval(spawnUFO, 2000); 
+        // 첫 UFO 생성 및 재귀적 스케줄링 시작
+        spawnUFO(); 
 
         requestAnimationFrame(updateGame);
     }
@@ -379,12 +374,34 @@
     function endGame(reason) {
         isPlaying = false;
         clearInterval(countdownTimer);
-        clearInterval(spawnTimer);
+        clearTimeout(spawnTimeout); // UFO 생성 중단
         
         document.getElementById('overlay-title').innerText = "게임 종료";
         document.getElementById('overlay-msg').innerHTML = `${reason}<br><br>최종 점수: <span style="color:#00e676; font-size:1.5rem;">${score}</span> 점`;
         document.getElementById('start-btn').innerText = "다시 하기";
         overlay.style.display = 'flex';
+    }
+
+    // --- 난이도 조절 로직 ---
+    function getDifficultyFactor() {
+        // 게임 진행률 (0: 시작, 1: 끝)
+        // 시간이 줄어들수록 진행률은 1에 가까워짐
+        const progress = (GAME_DURATION - time) / GAME_DURATION; 
+        return progress;
+    }
+
+    function scheduleNextSpawn() {
+        if (!isPlaying) return;
+
+        const progress = getDifficultyFactor();
+
+        // 생성 주기 계산 (ms)
+        // 시작: 2500ms(2.5초) -> 끝: 800ms(0.8초)
+        const maxSpawnRate = 2500;
+        const minSpawnRate = 800;
+        const currentSpawnRate = maxSpawnRate - (progress * (maxSpawnRate - minSpawnRate));
+
+        spawnTimeout = setTimeout(spawnUFO, currentSpawnRate);
     }
 
     function generateProblem() {
@@ -418,15 +435,21 @@
         `;
 
         const screenWidth = gameScreen.clientWidth;
-        // UFO가 화면 밖으로 나가지 않게 (양옆 여백 확보)
         const xPos = Math.random() * (screenWidth - 80) + 40; 
-        
         ufoEl.style.left = `${xPos}px`;
         ufoEl.style.top = `-60px`;
 
         gameScreen.appendChild(ufoEl);
 
-        const speed = Math.random() * 0.2 + 0.15; // 천천히
+        // --- 속도 난이도 조절 ---
+        const progress = getDifficultyFactor();
+        
+        // 기본 속도: 시작 0.15 -> 끝 0.5 (점점 빨라짐)
+        const baseSpeed = 0.15 + (progress * 0.35); 
+        // 랜덤 변동 폭
+        const randomVar = Math.random() * 0.2;
+        
+        const speed = baseSpeed + randomVar;
 
         ufos.push({
             el: ufoEl,
@@ -435,6 +458,9 @@
             answer: problem.answer,
             speed: speed
         });
+
+        // 다음 UFO 예약
+        scheduleNextSpawn();
     }
 
     function updateGame() {
@@ -447,7 +473,6 @@
             ufo.y += ufo.speed;
             ufo.el.style.top = `${ufo.y}px`;
 
-            // UFO가 화면 하단(레이저 발사 지점 근처)에 닿으면
             if (ufo.y > screenHeight - 20) {
                 damageEnergy();
                 ufo.el.remove();
@@ -503,7 +528,6 @@
         let hitIndex = -1;
         let lowestY = -1000;
 
-        // 가장 아래에 있는 정답 UFO 우선 타격
         for (let i = 0; i < ufos.length; i++) {
             if (ufos[i].answer === answer) {
                 if (ufos[i].y > lowestY) {
@@ -528,7 +552,6 @@
             boom.style.top = target.y + 'px';
             boom.style.fontSize = '2rem';
             boom.style.zIndex = 6;
-            // 폭발 이펙트 중앙 정렬
             boom.style.transform = "translate(-50%, -50%)"; 
             gameScreen.appendChild(boom);
             setTimeout(() => boom.remove(), 500);
@@ -539,7 +562,7 @@
             currentInput = ""; 
         } else {
             playWrongSound();
-            score -= 3; // 감점
+            score -= 3;
             if (score < 0) score = 0;
 
             inputDisplay.style.borderColor = 'red';
@@ -553,16 +576,9 @@
         const laser = document.createElement('div');
         laser.classList.add('laser');
         laser.style.left = `${targetX}px`;
-        laser.style.bottom = '0px'; // 게임 스크린 바닥에서 시작
-        // 레이저 길이 계산 (바닥에서 타겟까지)
-        // 화면 좌표계가 위(0) -> 아래(max) 이므로 계산 주의
-        // 레이저는 bottom:0 이므로 높이는 (전체높이 - 타겟y) 가 되어야 함
-        // 다만 타겟y는 top 기준임.
-        // 간단하게 화면 전체를 뚫도록 길게 설정하고 CSS로 처리
+        laser.style.bottom = '0px'; 
         laser.style.height = '150%'; 
-        
         gameScreen.appendChild(laser);
-
         setTimeout(() => { laser.style.opacity = '0'; }, 50);
         setTimeout(() => { laser.remove(); }, 150);
     }

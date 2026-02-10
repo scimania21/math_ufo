@@ -2,41 +2,41 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Math UFO Shooter (Final)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Math UFO Responsive</title>
     <style>
         /* --- 기본 설정 --- */
-        * { box-sizing: border-box; touch-action: manipulation; font-family: 'Verdana', sans-serif; user-select: none; }
-        body {
+        * { box-sizing: border-box; touch-action: manipulation; font-family: 'Verdana', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        html, body {
             margin: 0;
             padding: 0;
             background-color: #111;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            width: 100%;
+            height: 100%;
+            /* 모바일 주소창 대응을 위한 dvh 단위 사용, 미지원 브라우저는 vh 사용 */
             height: 100vh;
+            height: 100dvh; 
             overflow: hidden;
             color: white;
         }
 
-        /* --- 게임 컨테이너 --- */
+        /* --- 게임 전체 레이아웃 (Flexbox) --- */
         #game-container {
             position: relative;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px; /* 태블릿 등 큰 화면에서 너무 퍼지지 않게 */
             height: 100%;
+            margin: 0 auto; /* 중앙 정렬 */
             background-color: #1a1a2e;
-            border-left: 1px solid #333;
-            border-right: 1px solid #333;
             display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            flex-direction: column; /* 세로 배치 */
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* --- 상단 정보창 --- */
+        /* 1. 상단 정보창 (고정 크기) */
         #header {
-            flex: 0 0 auto;
+            flex: 0 0 auto; /* 크기 줄어들지 않음 */
             padding: 10px 15px;
             display: flex;
             justify-content: space-between;
@@ -49,9 +49,10 @@
         #timer { color: #ffeb3b; }
         #score { color: #00e676; }
 
-        /* --- 게임 화면 --- */
+        /* 2. 게임 화면 (남는 공간 모두 차지) */
         #game-screen {
-            flex: 1 1 auto;
+            flex: 1 1 auto; /* 남는 공간을 채움 */
+            min-height: 0;  /* 중요: 내용물이 많아도 이 영역이 줄어들 수 있게 함 */
             position: relative;
             overflow: hidden;
             border-bottom: 2px solid #00e676;
@@ -62,7 +63,7 @@
             background-position: 0 0, 40px 60px;
         }
 
-        /* --- UFO --- */
+        /* UFO 스타일 */
         .ufo {
             position: absolute;
             display: flex;
@@ -71,15 +72,16 @@
             justify-content: center;
             transform: translateX(-50%);
             z-index: 5;
+            will-change: top; /* 성능 최적화 */
         }
         
         .ufo-cockpit {
             background: #000;
             color: #fff;
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 12px;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.1rem; /* 모바일 고려 폰트 조정 */
             position: relative;
             bottom: -5px;
             border: 2px solid #ffd700;
@@ -90,8 +92,8 @@
         }
 
         .ufo-body {
-            width: 70px;
-            height: 22px;
+            width: 60px;
+            height: 18px;
             background: #ddd;
             border-radius: 50%;
             position: relative;
@@ -99,29 +101,31 @@
             box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
         }
 
-        /* --- 레이저 --- */
         .laser {
             position: absolute;
             width: 6px;
-            height: 30px;
+            height: 100%; /* 화면 끝까지 */
             background-color: #00e676;
             box-shadow: 0 0 8px #00e676;
-            border-radius: 3px;
             transform: translateX(-50%);
             z-index: 4;
+            transform-origin: bottom;
         }
 
-        /* --- 하단 컨트롤 패널 --- */
+        /* 3. 하단 컨트롤 패널 (화면 하단에 딱 붙음) */
         #control-panel {
-            flex: 0 0 auto;
+            flex: 0 0 auto; /* 크기 줄어들지 않음 */
             background-color: #111;
             padding: 10px;
+            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* 아이폰 하단 바 대응 */
             display: flex;
             flex-direction: column;
             gap: 8px;
             box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+            z-index: 20;
         }
 
+        /* 에너지 바 */
         #energy-wrapper {
             display: flex; 
             align-items: center; 
@@ -132,7 +136,7 @@
         }
         #energy-container {
             width: 100%;
-            height: 8px;
+            height: 6px;
             background-color: #333;
             border-radius: 4px;
             overflow: hidden;
@@ -144,67 +148,72 @@
             transition: width 0.3s ease, background-color 0.3s;
         }
 
+        /* 입력창 */
         #input-display {
             width: 100%;
-            height: 45px;
+            height: 40px; /* 고정 높이 */
             background-color: #222;
             border: 2px solid #00e676;
             border-radius: 8px;
             color: #00e676;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             text-align: center;
-            line-height: 43px;
+            line-height: 38px;
             font-weight: bold;
             letter-spacing: 2px;
         }
 
+        /* 키패드 (반응형 그리드) */
         #keypad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 6px;
+            /* 화면 높이에 따라 키패드 높이 유동적 조절 (너무 크거나 작지 않게) */
+            height: 30vh; 
+            max-height: 250px; 
+            min-height: 180px; 
         }
+        
         .key {
             background-color: #333;
             color: white;
             font-size: 1.4rem;
             font-weight: bold;
-            padding: 12px 0;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: background 0.1s, transform 0.05s;
+            /* 버튼 내용물 중앙 정렬 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%; /* 그리드 셀 꽉 채우기 */
+            transition: background 0.1s;
         }
-        .key:active { background-color: #555; transform: scale(0.95); }
+        .key:active { background-color: #555; }
         
-        .key-fire { 
-            background-color: #00e676; 
-            color: #000; 
-            font-size: 1.2rem;
-        }
+        .key-fire { background-color: #00e676; color: #000; font-size: 1.2rem; }
         .key-fire:active { background-color: #00b359; }
-        
-        .key-del { 
-            background-color: #444; 
-            font-size: 1rem; 
-        }
+        .key-del { background-color: #444; font-size: 1rem; }
 
-        /* --- 오버레이 --- */
+        /* 오버레이 */
         #overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 20, 0.9);
+            background: rgba(10, 10, 20, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 100;
             text-align: center;
+            padding: 20px;
         }
-        #overlay h1 { font-size: 3rem; color: #00e676; margin-bottom: 10px; text-shadow: 0 0 15px #00e676; }
-        #overlay p { font-size: 1.1rem; margin-bottom: 30px; color: #ccc; line-height: 1.6; }
+        #overlay h1 { font-size: 2.5rem; color: #00e676; margin-bottom: 10px; text-shadow: 0 0 15px #00e676; }
+        #overlay p { font-size: 1rem; margin-bottom: 30px; color: #ccc; line-height: 1.5; }
         #start-btn {
-            padding: 15px 50px;
-            font-size: 1.5rem;
+            padding: 15px 40px;
+            font-size: 1.3rem;
             background: #00e676;
             color: #000;
             border: none;
@@ -219,10 +228,7 @@
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
-
-        .damage-effect {
-            animation: damageFlash 0.3s;
-        }
+        .damage-effect { animation: damageFlash 0.3s; }
         @keyframes damageFlash {
             0% { box-shadow: inset 0 0 0 0 rgba(255, 0, 0, 0); }
             50% { box-shadow: inset 0 0 50px 30px rgba(255, 0, 0, 0.5); }
@@ -285,7 +291,6 @@
     let ufos = [];
     let currentInput = "";
     
-    // 오디오 컨텍스트
     let audioCtx;
 
     // DOM 요소
@@ -298,7 +303,7 @@
     const overlay = document.getElementById('overlay');
     const container = document.getElementById('game-container');
 
-    // --- 사운드 생성 함수 (Web Audio API) ---
+    // --- 사운드 함수 ---
     function initAudio() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -308,65 +313,48 @@
         }
     }
 
-    function playLaserSound() {
+    function playTone(type, startFreq, endFreq, duration) {
         if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
-
         osc.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-
-        osc.type = 'sawtooth'; 
-        osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
-        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2); 
-
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); 
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.2);
-    }
-
-    function playExplosionSound() {
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-
-        osc.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
-
+        
+        osc.type = type;
+        osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
+        if (endFreq) {
+            osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
+        }
+        
         gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
+        osc.stop(audioCtx.currentTime + duration);
     }
 
-    function playWrongSound() {
+    function playLaserSound() { playTone('sawtooth', 800, 100, 0.2); }
+    function playExplosionSound() { playTone('square', 150, 40, 0.3); }
+    function playWrongSound() { 
         if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
-
         osc.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
+        // 삐- 소리 (주파수 변화 없음)
+        
         gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
         gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
-
+        
         osc.start();
         osc.stop(audioCtx.currentTime + 0.3);
     }
-
 
     // --- 게임 로직 ---
     function startGame() {
-        initAudio(); // 게임 시작 시 오디오 활성화
+        initAudio();
         score = 0;
         time = 60;
         energy = 100;
@@ -383,7 +371,7 @@
             if (time <= 0) endGame("시간 종료!");
         }, 1000);
 
-        spawnTimer = setInterval(spawnUFO, 2000); // 2초마다 생성
+        spawnTimer = setInterval(spawnUFO, 2000); 
 
         requestAnimationFrame(updateGame);
     }
@@ -430,14 +418,15 @@
         `;
 
         const screenWidth = gameScreen.clientWidth;
-        const xPos = Math.random() * (screenWidth - 100) + 50; 
+        // UFO가 화면 밖으로 나가지 않게 (양옆 여백 확보)
+        const xPos = Math.random() * (screenWidth - 80) + 40; 
         
         ufoEl.style.left = `${xPos}px`;
         ufoEl.style.top = `-60px`;
 
         gameScreen.appendChild(ufoEl);
 
-        const speed = Math.random() * 0.2 + 0.15; 
+        const speed = Math.random() * 0.2 + 0.15; // 천천히
 
         ufos.push({
             el: ufoEl,
@@ -458,7 +447,8 @@
             ufo.y += ufo.speed;
             ufo.el.style.top = `${ufo.y}px`;
 
-            if (ufo.y > screenHeight - 30) {
+            // UFO가 화면 하단(레이저 발사 지점 근처)에 닿으면
+            if (ufo.y > screenHeight - 20) {
                 damageEnergy();
                 ufo.el.remove();
                 ufos.splice(i, 1);
@@ -513,7 +503,7 @@
         let hitIndex = -1;
         let lowestY = -1000;
 
-        // 정답 체크
+        // 가장 아래에 있는 정답 UFO 우선 타격
         for (let i = 0; i < ufos.length; i++) {
             if (ufos[i].answer === answer) {
                 if (ufos[i].y > lowestY) {
@@ -524,10 +514,8 @@
         }
 
         if (hitIndex !== -1) {
-            // 명중
             const target = ufos[hitIndex];
             
-            // 효과음 재생
             playLaserSound(); 
             setTimeout(playExplosionSound, 100); 
 
@@ -540,6 +528,8 @@
             boom.style.top = target.y + 'px';
             boom.style.fontSize = '2rem';
             boom.style.zIndex = 6;
+            // 폭발 이펙트 중앙 정렬
+            boom.style.transform = "translate(-50%, -50%)"; 
             gameScreen.appendChild(boom);
             setTimeout(() => boom.remove(), 500);
 
@@ -548,11 +538,8 @@
             score += 10;
             currentInput = ""; 
         } else {
-            // 오답 처리
             playWrongSound();
-            
-            // ★ 감점 로직 추가 (3점 감점, 최소 0점) ★
-            score -= 3;
+            score -= 3; // 감점
             if (score < 0) score = 0;
 
             inputDisplay.style.borderColor = 'red';
@@ -566,17 +553,18 @@
         const laser = document.createElement('div');
         laser.classList.add('laser');
         laser.style.left = `${targetX}px`;
-        laser.style.bottom = '0px';
-        laser.style.height = '1000px'; 
+        laser.style.bottom = '0px'; // 게임 스크린 바닥에서 시작
+        // 레이저 길이 계산 (바닥에서 타겟까지)
+        // 화면 좌표계가 위(0) -> 아래(max) 이므로 계산 주의
+        // 레이저는 bottom:0 이므로 높이는 (전체높이 - 타겟y) 가 되어야 함
+        // 다만 타겟y는 top 기준임.
+        // 간단하게 화면 전체를 뚫도록 길게 설정하고 CSS로 처리
+        laser.style.height = '150%'; 
         
         gameScreen.appendChild(laser);
 
-        setTimeout(() => {
-            laser.style.opacity = '0';
-        }, 50);
-        setTimeout(() => {
-            laser.remove();
-        }, 150);
+        setTimeout(() => { laser.style.opacity = '0'; }, 50);
+        setTimeout(() => { laser.remove(); }, 150);
     }
 </script>
 
